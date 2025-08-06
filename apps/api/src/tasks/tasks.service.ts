@@ -12,12 +12,7 @@ export class TasksService {
 
     async findAll(){
         const task = await this.prisma.task.findMany();
-        if( task.length === 0){
-            return { message: "No hay tareas"}
-        }
-        else{
-            return task
-        }
+        return task
     }
 
     async findOne(id: number){
