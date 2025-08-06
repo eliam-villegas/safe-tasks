@@ -1,30 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import {CreateTaskDto} from "./create-task.dto";
+import {PrismaClient} from "@prisma/client";
 
 @Injectable()
 export class TasksService {
 
-    private tasks = [
-        {id: 1, title: "Aprender NestJS", done: false},
-        {id: 2, title: "Crear Endpoint", done: true},
-    ];
+    private prisma = new PrismaClient();
 
-    private nextId = 3;
 
-    findAll(){
-        return this.tasks;
+    async findAll(){
+        return this.prisma.task.findMany();
     }
 
-    findOne(id: number){
-        return this.tasks.find((task) => task.id === id);
+    async findOne(id: number){
+        return this.prisma.task.findUnique({where: {id}});
     }
 
-    createTask(task: CreateTaskDto){
-        const newTask = {
-            id: this.nextId++,
-            ...task,
-        };
-        this.tasks.push(newTask);
-        return newTask;
+    async createTask(task: CreateTaskDto){
+        return this.prisma.task.create({
+            data: task,
+        });
     }
 }
