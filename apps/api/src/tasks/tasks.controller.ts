@@ -1,23 +1,25 @@
-import { Controller, UsePipes, ValidationPipe, Get, Post, Body } from '@nestjs/common';
+import { Controller, UsePipes, ValidationPipe,Param, Get, Post, Body } from '@nestjs/common';
 import {CreateTaskDto} from "./create-task.dto";
+import {TasksService} from "./tasks.service";
 
 @Controller('tasks')
 export class TasksController {
+    constructor(private readonly tasksService: TasksService) {}
 
     @Get()
     findAll(){
-        return [ {id: 1, title: "Aprender NestJS", done: false},
-                 {id: 2, title: "Crear Endpoint", done: true},
-        ];
+        return this.tasksService.findAll();
+    }
+
+    @Get(':id')
+    findOne(@Param("id") id:string){
+        return this.tasksService.findOne(Number(id));
     }
 
     @Post()
     @UsePipes(new ValidationPipe({whitelist: true, forbidNonWhitelisted: true}))
     create(@Body() task: CreateTaskDto){
-        return {
-            message: "Tarea válida",
-            data: task,
-        };
+        return this.tasksService.createTask(task);
     }
 
 }
