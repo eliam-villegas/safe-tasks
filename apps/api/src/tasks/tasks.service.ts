@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {Injectable, NotFoundException} from '@nestjs/common';
 import {CreateTaskDto} from "./create-task.dto";
-import {PrismaClient} from "@prisma/client";
+import {PrismaClient, Prisma} from "@prisma/client";
+
+import {UpdateTaskDto} from "./update-task.dto";
 
 @Injectable()
 export class TasksService {
@@ -9,16 +11,54 @@ export class TasksService {
 
 
     async findAll(){
-        return this.prisma.task.findMany();
+        const task = await this.prisma.task.findMany();
+        if( task.length === 0){
+            return { message: "No hay tareas"}
+        }
+        else{
+            return task
+        }
     }
 
     async findOne(id: number){
-        return this.prisma.task.findUnique({where: {id}});
+        const task = await this.prisma.task.findUnique({where: {id}});
+        if(!task){
+            throw new NotFoundException("Tarea no encontrada o no existe.");
+        }
+        return task;
     }
 
     async createTask(task: CreateTaskDto){
         return this.prisma.task.create({
             data: task,
         });
+    }
+
+    async updateTask(id: number, data: UpdateTaskDto){
+        try{
+            return await this.prisma.task.update({
+                where: { id },
+                data,
+            });
+        }
+        catch (error){
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025"){
+                throw new NotFoundException("No se encontró la tarea");
+            }
+        }
+        throw Error;
+    }
+
+    async delete(id: number){
+        try {
+            await this.prisma.task.delete({where: {id}});
+            return { message: "Tarea eliminada correctamente"}
+        }
+        catch (error){
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025"){
+                throw new NotFoundException("La tarea no existe");
+            }
+        }
+        throw Error;
     }
 }
