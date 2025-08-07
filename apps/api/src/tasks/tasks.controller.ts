@@ -1,4 +1,4 @@
-import {Controller, UsePipes, ValidationPipe, Param, Get, Post, Body, Patch, Delete, UseGuards} from '@nestjs/common';
+import {Controller, Request, UsePipes, ValidationPipe, Param, Get, Post, Body, Patch, Delete, UseGuards} from '@nestjs/common';
 import {CreateTaskDto} from "./create-task.dto";
 import {TasksService} from "./tasks.service";
 import {UpdateTaskDto} from "./update-task.dto";
@@ -10,30 +10,30 @@ export class TasksController {
     constructor(private readonly tasksService: TasksService) {}
 
     @Get()
-    async findAll(){
-        return await this.tasksService.findAll();
+    async findAll(@Request() req){
+        return await this.tasksService.findAll(req.user.userId);
     }
 
     @Get(':id')
-    async findOne(@Param("id") id:string){
-        return await this.tasksService.findOne(Number(id));
+    async findOne(@Param("id") id:string, @Request() req){
+        return await this.tasksService.findOne(Number(id), req.user.userId);
     }
 
     @Post()
     @UsePipes(new ValidationPipe({whitelist: true, forbidNonWhitelisted: true}))
-    async create(@Body() task: CreateTaskDto){
-        return await this.tasksService.createTask(task);
+    async create(@Body() task: CreateTaskDto, @Request() req){
+        return await this.tasksService.createTask(task, req.user.userId);
     }
 
     @Patch(":id")
     @UsePipes(new ValidationPipe({whitelist: true, forbidNonWhitelisted: true}))
-    async update(@Param("id") id:string, @Body() data: UpdateTaskDto){
-        return await this.tasksService.updateTask(Number(id),data);
+    async update(@Param("id") id:string, @Body() data: UpdateTaskDto, @Request() req){
+        return await this.tasksService.updateTask(Number(id), req.user.userId, data);
     }
 
     @Delete(":id")
-    async delete(@Param("id") id:string){
-        return await this.tasksService.delete(Number(id));
+    async delete(@Param("id") id:string, @Request() req){
+        return await this.tasksService.delete(Number(id), req.user.userId);
 
     }
 

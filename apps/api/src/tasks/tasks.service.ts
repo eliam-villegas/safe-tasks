@@ -9,29 +9,36 @@ export class TasksService {
     private prisma = new PrismaClient();
 
 
-    async findAll(){
-        const task = await this.prisma.task.findMany();
+    async findAll(userId:number){
+        const task = await this.prisma.task.findMany({
+            where: { userId },
+        });
         return task
     }
 
-    async findOne(id: number){
-        const task = await this.prisma.task.findUnique({where: {id}});
+    async findOne(id: number, userId: number){
+        const task = await this.prisma.task.findFirst({
+            where: {id, userId},
+        });
         if(!task){
-            throw new NotFoundException("Tarea no encontrada o no existe.");
+            throw new NotFoundException("Tarea no encontrada o no tienes permiso.");
         }
         return task;
     }
 
-    async createTask(task: CreateTaskDto){
+    async createTask(task: CreateTaskDto, userId: number){
         return this.prisma.task.create({
-            data: task,
+            data: {
+                ...task,
+                userId,
+            },
         });
     }
 
-    async updateTask(id: number, data: UpdateTaskDto){
+    async updateTask(id: number, userId: number, data: UpdateTaskDto){
         try{
-            return await this.prisma.task.update({
-                where: { id },
+            return this.prisma.task.update({
+                where: { id, userId },
                 data,
             });
         }
@@ -43,9 +50,9 @@ export class TasksService {
         throw Error;
     }
 
-    async delete(id: number){
+    async delete(id: number, userId: number){
         try {
-            await this.prisma.task.delete({where: {id}});
+            await this.prisma.task.delete({where: {id, userId}});
             return { message: "Tarea eliminada correctamente"}
         }
         catch (error){
