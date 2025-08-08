@@ -8,7 +8,7 @@ export class TasksService {
 
     private prisma = new PrismaClient();
 
-
+    // metodos user
     async findAll(userId:number){
         const task = await this.prisma.task.findMany({
             where: { userId },
@@ -62,4 +62,21 @@ export class TasksService {
         }
         throw Error;
     }
+    //fin metodos user
+
+    //metodos admin
+
+    async findAllTasks(){
+        return await this.prisma.task.findMany({
+            include: { user: true },
+        });
+    }
+
+    async deleteAnyTask(id: number){
+        return await this.prisma.task.delete({
+            where: { id },
+        });
+    }
+
+
 }

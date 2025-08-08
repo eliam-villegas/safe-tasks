@@ -3,11 +3,14 @@ import {CreateTaskDto} from "./create-task.dto";
 import {TasksService} from "./tasks.service";
 import {UpdateTaskDto} from "./update-task.dto";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
+import {AdminGuard} from "../auth/admin.guard"
 
 @UseGuards(JwtAuthGuard)
 @Controller('tasks')
 export class TasksController {
     constructor(private readonly tasksService: TasksService) {}
+
+    //endpoints user
 
     @Get()
     async findAll(@Request() req){
@@ -36,5 +39,25 @@ export class TasksController {
         return await this.tasksService.delete(Number(id), req.user.userId);
 
     }
+
+    //Fin endpoints user
+
+    //Endpoints de admin
+
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    @Get("admin/all-tasks")
+    async findAllTasksforAdmin(){
+        return await this.tasksService.findAllTasks();
+    }
+
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    @Delete("admin/:id")
+    async deleteTask(@Param("id") id:string){
+        return await this.tasksService.deleteAnyTask(Number(id));
+    }
+
+
+
+
 
 }

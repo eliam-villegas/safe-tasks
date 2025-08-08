@@ -32,4 +32,17 @@ export class UsersService {
         return await this.prisma.user.findUnique({where: {email}});
     }
 
+    async getAllUsers(){
+        return await this.prisma.user.findMany({
+            select: { id: true, email: true, role: true},
+        });
+    }
+
+    async updateUserRole(id: number, role: string){
+        return await this.prisma.user.update({
+            where: { id },
+            data: { role },
+        });
+    }
+
 }
