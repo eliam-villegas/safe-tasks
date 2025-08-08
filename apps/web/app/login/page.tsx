@@ -19,7 +19,25 @@ export default function LoginPage() {
 
         if (res.ok) {
             const data = await res.json();
+            const token = data.access_token;
+            localStorage.setItem('access_token', token);
             setMessage(`Login exitoso. Token: ${data.access_token}`);
+
+            const taskRes = await fetch('http://localhost:3001/tasks', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (taskRes.ok) {
+                const tasks = await taskRes.json();
+                console.log("Tareas del usuario:", tasks);
+                setMessage(`Login exitoso. Se encontraron ${tasks.length} tareas`);
+            }
+            else {
+                setMessage("Login exitoso, pero ocurrio un error al obtener las tareas.")
+            }
+
         } else {
             const err = await res.json();
             setMessage(err.message || 'Error al iniciar sesión');
