@@ -28,6 +28,5 @@ export const config = {
     matcher: [
         '/tasks/:path*',   // protege /tasks y subrutas
         '/admin/:path*',   // protege /admin
-        '/api/:path*',     // rutas API de Next
     ],
 };

@@ -30,12 +30,11 @@ export default function TasksPage() {
         load();
     }, [ready]);
 
-
     async function load() {
         try {
             const token = getToken();
             if (!token) return router.replace('/login');
-            const res = await fetch('http://localhost:3001/tasks', {
+            const res = await fetch('/api/tasks', {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -54,7 +53,7 @@ export default function TasksPage() {
         setMsg('');
 
         try {
-            const res = await fetch('http://localhost:3001/tasks', {
+            const res = await fetch('/api/tasks', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,7 +76,7 @@ export default function TasksPage() {
         const token = getToken();
         if (!token) return router.replace('/login');
         try {
-            const res = await fetch(`http://localhost:3001/tasks/${id}`, {
+            const res = await fetch(`/api/tasks/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -97,7 +96,7 @@ export default function TasksPage() {
         const token = getToken();
         if (!token) return router.replace('/login');
         try {
-            const res = await fetch(`http://localhost:3001/tasks/${id}`, {
+            const res = await fetch(`/api/tasks/${id}`, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -109,14 +108,10 @@ export default function TasksPage() {
         }
     }
 
-    function logout() {
-        clearToken();
-        document.cookie = "token=; Max-Age=0; Path=/; SameSite=Lax"
-        if(typeof document !== 'undefined'){
-            const el = document.activeElement as HTMLElement | null;
-            el?.blur();
-        }
-        setTimeout(() => router.replace("/login"), 30);
+    async function logout() {
+        await fetch("/api/auth/logout",
+            { method: 'POST' });
+        router.replace('/login');
     }
 
     if(!ready) return null;

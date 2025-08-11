@@ -17,7 +17,7 @@ export default function LoginPage() {
         setMessage('');
 
         try {
-            const res = await fetch('http://localhost:3001/auth/login', {
+            const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
@@ -30,7 +30,6 @@ export default function LoginPage() {
 
             const data = await res.json();
             setToken(data.access_token);
-            document.cookie = `token=${data.access_token}; Path=/; Max-Age=3600; SameSite=Lax`;
 
             if(typeof document !== 'undefined'){
                 const el = document.activeElement as HTMLElement | null;
