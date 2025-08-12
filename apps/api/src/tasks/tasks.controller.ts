@@ -1,9 +1,23 @@
-import {Controller, Request, UsePipes, ValidationPipe, Param, Get, Post, Body, Patch, Delete, UseGuards} from '@nestjs/common';
-import {CreateTaskDto} from "./create-task.dto";
+import {
+    Controller,
+    Request,
+    UsePipes,
+    ValidationPipe,
+    Param,
+    Get,
+    Post,
+    Body,
+    Patch,
+    Delete,
+    UseGuards,
+    Query, Req
+} from '@nestjs/common';
+import {CreateTaskDto} from "./dto/create-task.dto";
 import {TasksService} from "./tasks.service";
-import {UpdateTaskDto} from "./update-task.dto";
+import {UpdateTaskDto} from "./dto/update-task.dto";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
 import {AdminGuard} from "../auth/admin.guard"
+import {ListTasksDto} from "./dto/list-task.dto";
 
 @UseGuards(JwtAuthGuard)
 @Controller('tasks')
@@ -13,31 +27,34 @@ export class TasksController {
     //endpoints user
 
     @Get()
-    async findAll(@Request() req){
-        return await this.tasksService.findAll(req.user.userId);
+    findAll(@Query() q: ListTasksDto, @Req() req: any) {
+        console.log("[findAll user] sub=", req.user.sub);
+        return this.tasksService.findAll(req.user.sub, q);
     }
 
     @Get(':id')
     async findOne(@Param("id") id:string, @Request() req){
-        return await this.tasksService.findOne(Number(id), req.user.userId);
+        return await this.tasksService.findOne(Number(id), req.user.sub);
     }
 
     @Post()
     @UsePipes(new ValidationPipe({whitelist: true, forbidNonWhitelisted: true}))
     async create(@Body() task: CreateTaskDto, @Request() req){
-        return await this.tasksService.createTask(task, req.user.userId);
+        return await this.tasksService.createTask(task, req.user.sub);
     }
 
-    @Patch(":id")
-    @UsePipes(new ValidationPipe({whitelist: true, forbidNonWhitelisted: true}))
-    async update(@Param("id") id:string, @Body() data: UpdateTaskDto, @Request() req){
-        return await this.tasksService.updateTask(Number(id), req.user.userId, data);
+    @Patch(':id')
+    async update(
+        @Param('id') id: string,
+        @Body() data: UpdateTaskDto,
+        @Req() req: any,
+    ) {
+        return this.tasksService.updateTask(Number(id), req.user.sub, data);
     }
 
-    @Delete(":id")
-    async delete(@Param("id") id:string, @Request() req){
-        return await this.tasksService.delete(Number(id), req.user.userId);
-
+    @Delete(':id')
+    async delete(@Param('id') id: string, @Req() req: any) {
+        return this.tasksService.deleteTask(Number(id), req.user.sub);
     }
 
     //Fin endpoints user
@@ -46,7 +63,8 @@ export class TasksController {
 
     @UseGuards(JwtAuthGuard, AdminGuard)
     @Get("admin/all-tasks")
-    async findAllTasksforAdmin(){
+    async findAllTasksforAdmin(@Query() q: ListTasksDto, @Req() req: any) {
+        console.log("[findAll admin] sub=", req.user.sub);
         return await this.tasksService.findAllTasks();
     }
 
