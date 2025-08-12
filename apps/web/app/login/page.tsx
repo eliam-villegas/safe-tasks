@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { setToken } from '../../lib/auth';
+import Link from 'next/link';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -72,6 +73,13 @@ export default function LoginPage() {
                     {isLoading ? 'Entrando…' : 'Iniciar sesión'}
                 </button>
             </form>
+
+            <p style={{ marginTop: 12}}>
+                ¿No tienes cuenta?{' '}
+                <Link href="/register" style={{ color:'blue', textDecoration:'underline' }}>
+                    Regístrate aquí
+                </Link>
+            </p>
             {message && <p style={{ color: 'crimson' }}>{message}</p>}
         </div>
     );
