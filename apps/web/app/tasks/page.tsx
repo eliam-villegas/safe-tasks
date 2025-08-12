@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getToken, clearToken } from '../../lib/auth';
 
 type Task = { id: number; title: string; done: boolean };
 
@@ -13,32 +12,40 @@ export default function TasksPage() {
     const [title, setTitle] = useState('');
     const [msg, setMsg] = useState('');
     const [isCreating, setIsCreating] = useState(false);
+    const [search, setSearch] = useState('');
+    const [onlyDone, setOnlyDone] = useState<null | boolean>(null);
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(5);
+    const [total, setTotal] = useState(0);
+    const totalPages = Math.max(1, Math.ceil(total / limit));
 
     useEffect(() => {
-        // Evita render hasta comprobar token en cliente
-        const has = !!getToken();
-        if (!has) {
-            router.replace('/login');
-            return;
-        }
         setReady(true);
-    }, [router]);
+    }, []);
 
-    // Carga datos solo cuando ready=true
     useEffect(() => {
-        if (!ready) return;
         load();
-    }, [ready]);
+    }, [page, limit, search, onlyDone]);
 
     async function load() {
         try {
-            const token = getToken();
-            if (!token) return router.replace('/login');
-            const res = await fetch('/api/tasks', {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const params = new URLSearchParams();
+            params.set('page', String(page));
+            params.set('limit', String(limit));
+            if (search.trim()) params.set('search', search.trim());
+            if (onlyDone === true) params.set('done', 'true');
+            if (onlyDone === false) params.set('done', 'false');
+
+            const url = `/api/tasks?${params.toString()}`;
+            const res = await fetch(url);
+            console.log('[load] GET', url, res.status);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            setTasks(await res.json());
+
+            const data = await res.json(); // { items, total, page, limit }
+            console.log('[load] data', data);
+
+            setTasks(data.items ?? []);
+            setTotal(data.total ?? 0);
         } catch (e: any) {
             const text = typeof e === 'string' ? e : (e?.message ?? 'Error al cargar tareas');
             setMsg(String(text));
@@ -46,18 +53,11 @@ export default function TasksPage() {
     }
 
     async function createTask() {
-        const token = getToken();
-        if (!token) return router.replace('/login');
-        if (isCreating) return;          // <- evita dobles clicks
-        setIsCreating(true);
-        setMsg('');
-
         try {
             const res = await fetch('/api/tasks', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({ title, done: false }),
             });
@@ -73,14 +73,11 @@ export default function TasksPage() {
     }
 
     async function toggleDone(id: number, current: boolean) {
-        const token = getToken();
-        if (!token) return router.replace('/login');
         try {
             const res = await fetch(`/api/tasks/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({ done: !current }), // invierte el estado
             });
@@ -93,12 +90,9 @@ export default function TasksPage() {
     }
 
     async function deleteTask(id: number) {
-        const token = getToken();
-        if (!token) return router.replace('/login');
         try {
             const res = await fetch(`/api/tasks/${id}`, {
                 method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` },
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             await load();
@@ -131,6 +125,53 @@ export default function TasksPage() {
                 />
                 <button onClick={createTask} disabled={isCreating}>
                     {isCreating ? 'Agregando…' : 'Agregar'}
+                </button>
+            </div>
+
+            <div style={{ display:'flex', gap:8, marginBottom:12, alignItems:'center', flexWrap:'wrap' }}>
+                <input
+                    placeholder="Buscar por título…"
+                    value={search}
+                    onChange={(e)=> { setPage(1); setSearch(e.target.value); }}
+                    style={{ padding:6 }}
+                />
+                <select
+                    value={onlyDone === null ? 'all' : (onlyDone ? 'true' : 'false')}
+                    onChange={(e) => {
+                        const v = e.target.value;
+                        setPage(1);
+                        setOnlyDone(v === 'all' ? null : v === 'true');
+                    }}
+                >
+                    <option value="all">Todas</option>
+                    <option value="false">Pendientes</option>
+                    <option value="true">Hechas</option>
+                </select>
+
+                <select
+                    value={limit}
+                    onChange={(e)=> { setPage(1); setLimit(Number(e.target.value)); }}
+                >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                </select>
+
+                <span style={{ marginLeft:'auto' }}>
+                    Página {page} de {totalPages} — {total} tareas
+                </span>
+
+                <button
+                    onClick={()=> setPage(p => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                >
+                    ◀ Anterior
+                </button>
+                <button
+                    onClick={()=> setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page >= totalPages}
+                >
+                    Siguiente ▶
                 </button>
             </div>
 
