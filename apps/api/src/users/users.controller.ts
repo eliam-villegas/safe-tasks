@@ -4,7 +4,6 @@ import {UsersService} from "./users.service";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
 import {AdminGuard} from "../auth/admin.guard"
 
-@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
     constructor(private usersService: UsersService) {}
