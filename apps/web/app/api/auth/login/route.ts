@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 const API = process.env.NEXT_PUBLIC_API_URL!;
+const isProd = process.env.NODE_ENV === 'production';
 
 export async function POST(req: Request) {
     try {
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
             sameSite: "lax",
             path: "/",
             maxAge: 60*60,
-            secure: false, //CAMBIAR EN PRODUCCION A 'true' (https).
+            secure: isProd, //CAMBIAR EN PRODUCCION A 'true' (https).
         });
 
         return resp;
