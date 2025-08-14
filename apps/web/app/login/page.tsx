@@ -1,89 +1,58 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { setToken } from '../../lib/auth';
 import Link from 'next/link';
 
 export default function LoginPage() {
     const router = useRouter();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [message, setMessage] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [email, setEmail] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
+    const [message, setMessage] = useState<string>('');
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    async function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (isLoading) return;
         setIsLoading(true);
         setMessage('');
-
         try {
             const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
-
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                throw new Error(err.message || 'Error al iniciar sesión');
+                throw new Error(err?.message || `HTTP ${res.status}`);
             }
-
-            const data = await res.json();
-            setToken(data.access_token);
+            // Login ok: la API interna setea cookie httpOnly
             window.dispatchEvent(new Event('auth-changed'));
             router.replace('/tasks');
             router.refresh();
-
-            if(typeof document !== 'undefined'){
-                const el = document.activeElement as HTMLElement | null;
-                el?.blur();
-            }
-
-            await new Promise((r) => setTimeout(r, 30));
-
-            router.replace('/tasks');
-
-        } catch (err: any) {
-            const text = typeof err === 'string'
-                ? err
-                : (err?.message ?? 'Error inesperado');
-            setMessage(String(text));
+        } catch (err: unknown) {
+            setMessage(err instanceof Error ? err.message : 'Error inesperado');
         } finally {
             setIsLoading(false);
         }
     }
 
     return (
-        <div style={{ padding: '2rem' }}>
-            <h1>Login</h1>
+        <div style={{ padding: 16 }}>
+            <h1>Iniciar sesión</h1>
             <form onSubmit={handleSubmit} style={{ display:'grid', gap:8, maxWidth:360 }}>
-                <input
-                    placeholder="Correo electrónico"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required type="email"
-                    autoComplete="username"
-                />
-                <input
-                    placeholder="Contraseña"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required type="password"
-                    autoComplete="current-password"
-                />
-                <button type="submit" disabled={isLoading}>
-                    {isLoading ? 'Entrando…' : 'Iniciar sesión'}
-                </button>
+                <input type="email" placeholder="Correo" value={email} onChange={e => setEmail(e.target.value)} required />
+                <input type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} required />
+                <button type="submit" disabled={isLoading}>{isLoading ? 'Ingresando…' : 'Ingresar'}</button>
             </form>
 
-            <p style={{ marginTop: 12}}>
+            <p style={{ marginTop: 12 }}>
                 ¿No tienes cuenta?{' '}
-                <Link href="/register" style={{ color:'blue', textDecoration:'underline' }}>
+                <Link href="/register" style={{ color: 'blue', textDecoration: 'underline' }}>
                     Regístrate aquí
                 </Link>
             </p>
-            {message && <p style={{ color: 'crimson' }}>{message}</p>}
+
+            {message && <p style={{ color:'crimson' }}>{message}</p>}
         </div>
     );
 }
