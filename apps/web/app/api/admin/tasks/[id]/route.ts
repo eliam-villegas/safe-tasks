@@ -2,11 +2,11 @@ import { NextRequest, NextResponse} from 'next/server'
 
 const API = process.env.NEXT_PUBLIC_API_URL!;
 
-export async function PATCH(req: NextRequest, ctx: { params: { id: string}}){
+export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string}>}){
     const token = req.cookies.get('token')?.value;
     if(!token) return NextResponse.json({message:'No autorizado'}, {status: 401});
     const body = await req.json().catch(() => ({}));
-    const { id } = ctx.params;
+    const { id } = await ctx.params;
 
     const res = await fetch(`${API}/tasks/admin/${id}`, {
         method: 'PATCH',
@@ -18,10 +18,10 @@ export async function PATCH(req: NextRequest, ctx: { params: { id: string}}){
     return NextResponse.json(data, { status: res.status});
 }
 
-export async function DELETE(req: NextRequest, ctx: { params: { id: string}}){
+export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string}>}){
     const token = req.cookies.get('token')?.value;
     if(!token) return NextResponse.json({message:'No autorizado'}, {status: 401});
-    const { id } = ctx.params;
+    const { id } = await ctx.params;
 
     const res = await fetch(`${API}/tasks/admin/${id}`, {
         method: 'DELETE',
