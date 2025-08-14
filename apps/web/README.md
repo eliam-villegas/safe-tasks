@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Resumen del proyecto
 
-## Getting Started
+**SafeTasks** es una aplicación web para la gestión de tareas con soporte multiusuario
+y control de roles (usuario y administrador), **buscar y eliminar** sus tareas.
+Los adminitradores, además, pueden **visualizar y gestionar todas las tareas** en el sistema
+mediante un panel dedicado.
 
-First, run the development server:
+## Instalación y configuración
 
-```bash
+### Requisitos previos
+* Node.js 20+
+* npm o yarn
+* Base de datos PostgreSQL (o la de su preferencia con Prisma)
+* Prisma CLI `(npm install prisma -g)`
+
+#### Pasos:
+```
+# Clonar el repositorio
+git clone <repo-url>
+cd safe-tasks
+
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env con credenciales DB y secretos JWT
+
+# Ejecutar migraciones Prisma
+npx prisma migrate dev
+
+# Levantar en desarrollo
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Manual de uso
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Roles y acceso
+* **Usuario**: Puede ver, crear, editar y borrar sólo sus propias tareas.
+* **Administrador**: Tiene acceso al panel admin, donde puede ver y modificar todas las tareas.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Flujo básico
+1. **Registro**
+   * En la pantalla de Login hay un enlace azul "Regístrate aquí".
+   * Completar el formulario y enviar.
 
-## Learn More
+2. **Inicio de sesión**
+   * Ingresar credenciales.
+   * Dependiendo del rol, se mostrará la barra de navegación con las opciones correspondientes.
 
-To learn more about Next.js, take a look at the following resources:
+3. **Gestión de tareas**:
+    * Buscar, filtrar y paginar tareas.
+    * Marcar como hecha o pendiente.
+    * Crear o eliminar tareas.
+   
+4. **Panel Admin**:
+    * Disponible sólo para administradores.
+    * Muestra todas las tareas del sistema.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Detalles técnicos
+### Autenticación
+* JWT + Cookies HTTPOnly.
+* Rutas protegidas por middleware en el frontend (`/tasks, /admin`).
+* Endpoint `/api/auth/me` para obtener el usuario actual.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Endpoints principales (Backend)
 
-## Deploy on Vercel
+| Método | Ruta           | Descripción                            | Roles |
+|--------|----------------|----------------------------------------|-------|
+| POST   | `/auth/login`  | Inicia sesión y devuelve cookie JWT    | Todos |
+| POST   | `/auth/logout` | Cierra sesión                          | Todos |
+| GET    | `/auth/me`     | Devuelve datos del usuario autenticado | Todos |
+| GET    | `/tasks`       | Lista tarea del usuario autenticado    | User  |
+| POST   | `/tasks`       | Crea tarea                             | User  |
+| PATCH  | `/tasks/:id`   | Actualiza tarea                        | User  |
+| DELETE | `/tasks/:id`   | Elimina tarea                          | User  |
+| GET    | `/admin/tasks` | Lista todas las tareas del sistema     | Admin |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Despliegue
+### Producción con Node.js
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+npm install
+npm run build
+npm run start
+```
+* Usar reverse proxy (Nginx) para manejar HTTPS
+* Configurar variables de entorno seguras (`JWT_SECRET, DATABASE_URL`)
