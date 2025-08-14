@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import QuickBar from "./components/QuickBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,11 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return (
         <html lang="es">
         <body style={{ fontFamily:'system-ui, sans-serif', maxWidth:720, margin:'0 auto', padding:16 }}>
-        <nav style={{ display:'flex', gap:12, marginBottom:16 }}>
-            <a href="/">Inicio</a>
-            <a href="/login">Login</a>
-            <a href="/tasks">Tareas</a>
-        </nav>
+        <QuickBar/>
         {children}
         </body>
         </html>

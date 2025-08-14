@@ -114,7 +114,6 @@ export default function TasksPage() {
         <main style={{ padding: 16 }}>
             <header style={{ display:'flex', justifyContent:'space-between', marginBottom:12 }}>
                 <h1>Tareas</h1>
-                <button onClick={logout}>Cerrar sesión</button>
             </header>
 
             <div style={{ display:'flex', gap:8, marginBottom:12 }}>
@@ -177,7 +176,6 @@ export default function TasksPage() {
 
             {msg && <p style={{color:'crimson'}}>{msg}</p>}
 
-            {/* aquí abajo luego metemos los botones PATCH/DELETE */}
             {tasks.length === 0 ? (
                 <p>No hay tareas.</p>
             ) : (

@@ -31,6 +31,9 @@ export default function LoginPage() {
 
             const data = await res.json();
             setToken(data.access_token);
+            window.dispatchEvent(new Event('auth-changed'));
+            router.replace('/tasks');
+            router.refresh();
 
             if(typeof document !== 'undefined'){
                 const el = document.activeElement as HTMLElement | null;
