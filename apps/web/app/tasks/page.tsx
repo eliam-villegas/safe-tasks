@@ -1,33 +1,29 @@
 'use client';
-
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 type Task = { id: number; title: string; done: boolean };
+type ListResponse = { items: Task[]; total: number; page: number; limit: number };
 
 export default function TasksPage() {
     const router = useRouter();
-    const [ready, setReady] = useState(false);
+
+    const [ready, setReady] = useState<boolean>(false);
     const [tasks, setTasks] = useState<Task[]>([]);
-    const [title, setTitle] = useState('');
-    const [msg, setMsg] = useState('');
-    const [isCreating, setIsCreating] = useState(false);
-    const [search, setSearch] = useState('');
+    const [title, setTitle] = useState<string>('');
+    const [msg, setMsg] = useState<string>('');
+    const [isCreating, setIsCreating] = useState<boolean>(false);
+    const [search, setSearch] = useState<string>('');
     const [onlyDone, setOnlyDone] = useState<null | boolean>(null);
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(5);
-    const [total, setTotal] = useState(0);
+    const [page, setPage] = useState<number>(1);
+    const [limit, setLimit] = useState<number>(5);
+    const [total, setTotal] = useState<number>(0);
+
     const totalPages = Math.max(1, Math.ceil(total / limit));
 
-    useEffect(() => {
-        setReady(true);
-    }, []);
+    useEffect(() => { setReady(true); }, []);
 
-    useEffect(() => {
-        load();
-    }, [page, limit, search, onlyDone]);
-
-    async function load() {
+    const load = useCallback(async () => {
         try {
             const params = new URLSearchParams();
             params.set('page', String(page));
@@ -37,36 +33,39 @@ export default function TasksPage() {
             if (onlyDone === false) params.set('done', 'false');
 
             const url = `/api/tasks?${params.toString()}`;
-            const res = await fetch(url);
-            console.log('[load] GET', url, res.status);
+            const res = await fetch(url, { cache: 'no-store' });
+            if (res.status === 401) { router.replace('/login'); return; }
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-            const data = await res.json(); // { items, total, page, limit }
-            console.log('[load] data', data);
-
-            setTasks(data.items ?? []);
-            setTotal(data.total ?? 0);
-        } catch (e: any) {
-            const text = typeof e === 'string' ? e : (e?.message ?? 'Error al cargar tareas');
-            setMsg(String(text));
+            const data = (await res.json()) as Partial<ListResponse>;
+            setTasks(Array.isArray(data.items) ? data.items : []);
+            setTotal(typeof data.total === 'number' ? data.total : 0);
+            setMsg('');
+        } catch (err: unknown) {
+            setMsg(err instanceof Error ? err.message : 'Error al cargar tareas');
         }
-    }
+    }, [page, limit, search, onlyDone, router]);
+
+    useEffect(() => {
+        if (!ready) return;
+        void load();
+    }, [ready, load]);
 
     async function createTask() {
+        if (isCreating) return;
+        setIsCreating(true);
+        setMsg('');
         try {
             const res = await fetch('/api/tasks', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, done: false }),
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             setTitle('');
             await load();
-        } catch (e: any) {
-            const text = typeof e === 'string' ? e : (e?.message ?? 'Error al crear tareas');
-            setMsg(String(text));
+        } catch (err: unknown) {
+            setMsg(err instanceof Error ? err.message : 'Error al crear tarea');
         } finally {
             setIsCreating(false);
         }
@@ -76,44 +75,33 @@ export default function TasksPage() {
         try {
             const res = await fetch(`/api/tasks/${id}`, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ done: !current }), // invierte el estado
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ done: !current }),
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             await load();
-        } catch (e: any) {
-            const text = typeof e === 'string' ? e : (e?.message ?? 'Error al actualizar tarea');
-            setMsg(String(text));
+        } catch (err: unknown) {
+            setMsg(err instanceof Error ? err.message : 'Error al actualizar tarea');
         }
     }
 
     async function deleteTask(id: number) {
         try {
-            const res = await fetch(`/api/tasks/${id}`, {
-                method: 'DELETE',
-            });
+            const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             await load();
-        } catch (e: any) {
-            const text = typeof e === 'string' ? e : (e?.message ?? 'Error al eliminar tarea');
-            setMsg(String(text));
+        } catch (err: unknown) {
+            setMsg(err instanceof Error ? err.message : 'Error al eliminar tarea');
         }
     }
 
-    async function logout() {
-        await fetch("/api/auth/logout",
-            { method: 'POST' });
-        router.replace('/login');
-    }
-
-    if(!ready) return null;
+    if (!ready) return null;
 
     return (
         <main style={{ padding: 16 }}>
             <header style={{ display:'flex', justifyContent:'space-between', marginBottom:12 }}>
                 <h1>Tareas</h1>
+                {/* Logout está en QuickBar */}
             </header>
 
             <div style={{ display:'flex', gap:8, marginBottom:12 }}>
@@ -146,7 +134,6 @@ export default function TasksPage() {
                     <option value="false">Pendientes</option>
                     <option value="true">Hechas</option>
                 </select>
-
                 <select
                     value={limit}
                     onChange={(e)=> { setPage(1); setLimit(Number(e.target.value)); }}
@@ -155,23 +142,11 @@ export default function TasksPage() {
                     <option value={10}>10</option>
                     <option value={20}>20</option>
                 </select>
-
                 <span style={{ marginLeft:'auto' }}>
-                    Página {page} de {totalPages} — {total} tareas
-                </span>
-
-                <button
-                    onClick={()=> setPage(p => Math.max(1, p - 1))}
-                    disabled={page <= 1}
-                >
-                    ◀ Anterior
-                </button>
-                <button
-                    onClick={()=> setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={page >= totalPages}
-                >
-                    Siguiente ▶
-                </button>
+          Página {page} de {totalPages} — {total} tareas
+        </span>
+                <button onClick={()=> setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>◀</button>
+                <button onClick={()=> setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>▶</button>
             </div>
 
             {msg && <p style={{color:'crimson'}}>{msg}</p>}

@@ -4,12 +4,12 @@ import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
     const router = useRouter();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [msg, setMsg] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [email, setEmail] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
+    const [msg, setMsg] = useState<string>('');
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    async function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (isLoading) return;
         setIsLoading(true);
@@ -21,13 +21,14 @@ export default function RegisterPage() {
                 body: JSON.stringify({ email, password }),
             });
             if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                throw new Error(err.message || `HTTP ${res.status}`);
+                const err = (await res.json().catch(() => ({}))) as { message?: string };
+                throw new Error(err?.message ?? `HTTP ${res.status}`);
             }
-            setMsg('Registro exitoso. Redirigiendo a login…');
-            router.push('/login');
-        } catch (e: any) {
-            setMsg(e?.message ?? 'Error al registrar');
+            setMsg('Registro exitoso. Redirigiendo…');
+            router.replace('/login');
+            router.refresh();
+        } catch (err: unknown) {
+            setMsg(err instanceof Error ? err.message : 'Error inesperado');
         } finally {
             setIsLoading(false);
         }

@@ -1,15 +1,5 @@
 {
   "name": "safe-tasks",
-  "version": "1.0.0",
-  "description": "",
-  "main": "dist/index.js",
-  "scripts": {
-    "build": "tsc",
-    "postinstall": "prisma generate -d ./apps/api"
-  },
-  "dependencies": {},
-  "devDependencies": {
-    "typescript": "^5.5.3"
-  },
-  "private": true
+  "private": true,
+  "workspaces": ["apps/api", "apps/web"]
 }
