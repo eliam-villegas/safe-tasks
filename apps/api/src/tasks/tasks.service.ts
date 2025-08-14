@@ -97,13 +97,20 @@ export class TasksService {
 
     async findAllTasks(){
         return await this.prisma.task.findMany({
-            include: { user: true },
+            select: { id: true, title: true, done:true, user: { select: { id: true, email: true, role: true } } },
         });
     }
 
     async deleteAnyTask(id: number){
         return await this.prisma.task.delete({
             where: { id },
+        });
+    }
+
+    async updateAny(id: number, data: UpdateTaskDto){
+        return this.prisma.task.update({
+            where: { id },
+            data
         });
     }
 

@@ -74,8 +74,9 @@ export class TasksController {
         return await this.tasksService.deleteAnyTask(Number(id));
     }
 
-
-
-
-
+    @UseGuards(JwtAuthGuard, AdminGuard)
+    @Patch('admin/:id')
+    updateAny(@Param('id') id: string, @Body() dto: UpdateTaskDto){
+        return this.tasksService.updateAny(Number(id), dto);
+    }
 }
