@@ -99,30 +99,40 @@ export default function TasksPage() {
 
     return (
         <main style={{ padding: 16 }}>
-            <header style={{ display:'flex', justifyContent:'space-between', marginBottom:12 }}>
-                <h1>Tareas</h1>
-                {/* Logout está en QuickBar */}
+            <header className="flex items-center justify-between mb-3">
+                <h1 className="text-2xl font-semibold">Tareas</h1>
             </header>
+            {msg && (
+                <p className="mb-3 text-sm text-red-600">{msg}</p>
+            )}
 
-            <div style={{ display:'flex', gap:8, marginBottom:12 }}>
-                <input
-                    placeholder="Nueva tarea..."
-                    value={title}
-                    onChange={(e)=>setTitle(e.target.value)}
-                />
-                <button onClick={createTask} disabled={isCreating}>
-                    {isCreating ? 'Agregando…' : 'Agregar'}
-                </button>
+            <div className="card space-y-3 mb-4">
+                <label className="block">
+                    <span className="muted block mb-1">Nueva tarea</span>
+                    <input
+                        className="input"
+                        placeholder="Escribe un título…"
+                        value={title}
+                        onChange={(e)=>setTitle(e.target.value)}
+                    />
+                </label>
+                <div className="flex gap-2 justify-end">
+                    <button onClick={createTask} disabled={isCreating} className="btn">
+                        {isCreating ? 'Agregando…' : 'Agregar'}
+                    </button>
+                </div>
             </div>
 
-            <div style={{ display:'flex', gap:8, marginBottom:12, alignItems:'center', flexWrap:'wrap' }}>
+            <div className="card flex flex-wrap items-center gap-3 mb-4">
                 <input
+                    className="input max-w-xs"
                     placeholder="Buscar por título…"
                     value={search}
                     onChange={(e)=> { setPage(1); setSearch(e.target.value); }}
-                    style={{ padding:6 }}
                 />
+
                 <select
+                    className="select"
                     value={onlyDone === null ? 'all' : (onlyDone ? 'true' : 'false')}
                     onChange={(e) => {
                         const v = e.target.value;
@@ -134,7 +144,9 @@ export default function TasksPage() {
                     <option value="false">Pendientes</option>
                     <option value="true">Hechas</option>
                 </select>
+
                 <select
+                    className="select"
                     value={limit}
                     onChange={(e)=> { setPage(1); setLimit(Number(e.target.value)); }}
                 >
@@ -142,30 +154,57 @@ export default function TasksPage() {
                     <option value={10}>10</option>
                     <option value={20}>20</option>
                 </select>
-                <span style={{ marginLeft:'auto' }}>
-          Página {page} de {totalPages} — {total} tareas
-        </span>
-                <button onClick={()=> setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>◀</button>
-                <button onClick={()=> setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>▶</button>
+
+                <div className="ml-auto flex items-center gap-2">
+                    <span className="muted">Página {page} de {totalPages} — {total} tareas</span>
+                    <button
+                        onClick={()=> setPage(p => Math.max(1, p - 1))}
+                        disabled={page <= 1}
+                        className="btn-secondary px-3 py-2 rounded"
+                    >
+                        ◀
+                    </button>
+                    <button
+                        onClick={()=> setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={page >= totalPages}
+                        className="btn-secondary px-3 py-2 rounded"
+                    >
+                        ▶
+                    </button>
+                </div>
             </div>
 
-            {msg && <p style={{color:'crimson'}}>{msg}</p>}
+            {msg && <p className="text-red-600">{msg}</p>}
 
             {tasks.length === 0 ? (
-                <p>No hay tareas.</p>
+                <div className="card text-center text-gray-600">
+                    <div className="text-3xl mb-2">✓</div>
+                    <p>No hay tareas. Crea la primera arriba.</p>
+                </div>
             ) : (
-                <ul style={{ display:'grid', gap:8, padding:0 }}>
+                <ul className="grid gap-2">
                     {tasks.map(t => (
-                        <li key={t.id} style={{ listStyle:'none', border:'1px solid #ddd', padding:8, borderRadius:8, display:'flex', gap:8, alignItems:'center', justifyContent:'space-between' }}>
+                        <li
+                            key={t.id}
+                            className="bg-white rounded-xl border p-3 flex items-center justify-between"
+                        >
                             <div>
-                                <strong>{t.title}</strong>
-                                <span style={{ marginLeft:8, opacity:.7 }}>{t.done ? '✔️ Hecha' : '⏳ Pendiente'}</span>
+                                <strong className="font-medium">{t.title}</strong>
+                                <span className={`ml-2 text-sm ${t.done ? 'text-green-600' : 'text-amber-600'}`}>
+                                    {t.done ? '✔ Hecha' : '⏳ Pendiente'}
+                                </span>
                             </div>
-                            <div style={{ display:'flex', gap:8 }}>
-                                <button onClick={() => toggleDone(t.id, t.done)}>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => toggleDone(t.id, t.done)}
+                                    className="btn-secondary"
+                                >
                                     {t.done ? 'Marcar pendiente' : 'Marcar hecha'}
                                 </button>
-                                <button onClick={() => deleteTask(t.id)}>
+                                <button
+                                    onClick={() => deleteTask(t.id)}
+                                    className="btn"
+                                >
                                     Eliminar
                                 </button>
                             </div>

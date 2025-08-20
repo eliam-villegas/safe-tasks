@@ -1,58 +1,60 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { setToken } from '../../lib/auth';
 
 export default function LoginPage() {
     const router = useRouter();
-    const [email, setEmail] = useState<string>('');
-    const [password, setPassword] = useState<string>('');
-    const [message, setMessage] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [msg, setMsg] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (isLoading) return;
-        setIsLoading(true);
-        setMessage('');
+        setIsLoading(true); setMsg('');
         try {
             const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                throw new Error(err?.message || `HTTP ${res.status}`);
-            }
-            // Login ok: la API interna setea cookie httpOnly
-            window.dispatchEvent(new Event('auth-changed'));
-            router.replace('/tasks');
-            router.refresh();
-        } catch (err: unknown) {
-            setMessage(err instanceof Error ? err.message : 'Error inesperado');
+            if (!res.ok) throw new Error((await res.json().catch(()=>({}))).message || 'Error al iniciar sesión');
+
+            const data = await res.json();
+            setToken(data?.ok ? 'cookie-set-on-server' : '');
+            router.push('/tasks');
+        } catch (e: any) {
+            setMsg(e?.message ?? 'Error inesperado');
         } finally {
             setIsLoading(false);
         }
     }
 
     return (
-        <div style={{ padding: 16 }}>
-            <h1>Iniciar sesión</h1>
-            <form onSubmit={handleSubmit} style={{ display:'grid', gap:8, maxWidth:360 }}>
-                <input type="email" placeholder="Correo" value={email} onChange={e => setEmail(e.target.value)} required />
-                <input type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} required />
-                <button type="submit" disabled={isLoading}>{isLoading ? 'Ingresando…' : 'Ingresar'}</button>
-            </form>
-
-            <p style={{ marginTop: 12 }}>
-                ¿No tienes cuenta?{' '}
-                <Link href="/register" style={{ color: 'blue', textDecoration: 'underline' }}>
-                    Regístrate aquí
-                </Link>
-            </p>
-
-            {message && <p style={{ color:'crimson' }}>{message}</p>}
+        <div className="min-h-[70vh] flex items-center justify-center">
+            <div className="card w-full max-w-sm space-y-4">
+                <h1 className="text-xl font-semibold">Iniciar sesión</h1>
+                <form onSubmit={handleSubmit} className="grid gap-3">
+                    <label className="space-y-1">
+                        <span className="muted">Correo</span>
+                        <input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} required />
+                    </label>
+                    <label className="space-y-1">
+                        <span className="muted">Contraseña</span>
+                        <input className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} required />
+                    </label>
+                    <button className="btn w-full" disabled={isLoading}>
+                        {isLoading ? 'Entrando…' : 'Iniciar sesión'}
+                    </button>
+                </form>
+                {msg && <p className="text-sm text-red-600">{msg}</p>}
+                <p className="text-sm">
+                    ¿No tienes cuenta?{' '}
+                    <a className="text-blue-600 hover:underline" href="/register">Regístrate aquí</a>
+                </p>
+            </div>
         </div>
     );
 }
