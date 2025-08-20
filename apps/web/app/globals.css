@@ -16,4 +16,4 @@
 body { @apply bg-gray-50 text-gray-900; }
 
 * { box-sizing: border-box; }
-a { text-decoration: none; color: inherit; }
+a:not(.btn):not(.btn-secondary) { text-decoration: none; color: inherit; }
