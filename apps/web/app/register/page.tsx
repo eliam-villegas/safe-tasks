@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import PasswordInput from '../components/PasswordInput';
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -45,7 +46,7 @@ export default function RegisterPage() {
                     </label>
                     <label>
                         <span className="muted">Contraseña (min 6)</span>
-                        <input className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} required />
+                        <PasswordInput className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} required />
                     </label>
 
                     <button className="btn w-full" type="submit" disabled={isLoading}>{isLoading ? 'Creando…' : 'Registrarme'}</button>
