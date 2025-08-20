@@ -1,87 +1,60 @@
 'use client';
-
-import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
-type Me = { sub: number; email: string; role: 'admin' | 'user' };
-type Status = 'loading' | 'guest' | 'user' | 'admin';
+type Me = { email: string; role: 'user' | 'admin' } | null;
 
 export default function QuickBar() {
-    const router = useRouter();
     const pathname = usePathname();
+    const router = useRouter();
+    const [me, setMe] = useState<Me>(null);
 
-    const [me, setMe] = useState<Me | null>(null);
-    const [status, setStatus] = useState<Status>('loading');
-
-    const refetch = useCallback(async () => {
-        try {
-            setStatus(s => (s === 'loading' ? s : 'loading'));
-            const r = await fetch('/api/auth/me', { cache: 'no-store' });
-            if (!r.ok) {
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch('/api/auth/me', { cache: 'no-store' });
+                if (!res.ok) return setMe(null);
+                const data = await res.json();
+                setMe(data?.email ? { email: data.email, role: data.role } : null);
+            } catch {
                 setMe(null);
-                setStatus('guest');
-                return;
             }
-            const data = (await r.json()) as Me;
-            setMe(data);
-            setStatus(data?.role === 'admin' ? 'admin' : 'user');
-        } catch {
-            setMe(null);
-            setStatus('guest');
-        }
-    }, []);
+        })();
+    }, [pathname]);
 
-    // 1) Al montar
-    useEffect(() => { refetch(); }, [refetch]);
-
-    // 2) Cada vez que cambia la ruta
-    useEffect(() => { refetch(); }, [pathname, refetch]);
-
-    // 3) Al recuperar foco de la ventana
-    useEffect(() => {
-        const onFocus = () => refetch();
-        window.addEventListener('focus', onFocus);
-        return () => window.removeEventListener('focus', onFocus);
-    }, [refetch]);
-
-    // 4) (Opcional) Escuchar evento global 'auth-changed'
-    useEffect(() => {
-        const h = () => refetch();
-        window.addEventListener('auth-changed', h);
-        return () => window.removeEventListener('auth-changed', h);
-    }, [refetch]);
+    const isActive = (href: string) => pathname === href;
 
     async function logout() {
         await fetch('/api/auth/logout', { method: 'POST' });
-        // Notifica y refresca UI
-        window.dispatchEvent(new Event('auth-changed'));
         router.replace('/login');
-        router.refresh();
     }
 
     return (
-        <nav style={{ display:'flex', gap:12, marginBottom:16, alignItems:'center' }}>
-            <Link href="/">Inicio</Link>
+        <div className="w-full flex items-center gap-3">
+            {/* izquierda: navegación */}
+            <div className="flex items-center gap-1">
+                <Link href="/" className={`navlink ${isActive('/') ? 'navlink-active' : ''}`}>Inicio</Link>
+                <Link href="/tasks" className={`navlink ${isActive('/tasks') ? 'navlink-active' : ''}`}>Tareas</Link>
+                {me?.role === 'admin' && (
+                    <Link href="/admin" className={`navlink ${isActive('/admin') ? 'navlink-active' : ''}`}>Panel Admin</Link>
+                )}
+            </div>
 
-            {(status === 'user' || status === 'admin') && <Link href="/tasks">Tareas</Link>}
-            {status === 'admin' && <Link href="/admin">Panel Admin</Link>}
-
-            <span style={{ marginLeft:'auto' }} />
-
-            {status === 'loading' ? (
-                <span style={{ opacity:.6 }}>...</span>
-            ) : status === 'guest' ? (
-                <>
-                    <Link href="/login">Login</Link>
-                    <Link href="/register">Registro</Link>
-                </>
-            ) : (
-                <>
-                    <span style={{ opacity:.7 }}>{me?.email}</span>
-                    <button onClick={logout}>Cerrar sesión</button>
-                </>
-            )}
-        </nav>
+            {/* derecha: sesión */}
+            <div className="ml-auto flex items-center gap-2">
+                {me ? (
+                    <>
+                        <span className="text-sm text-gray-500 hidden sm:inline">{me.email}</span>
+                        <button className="btn-secondary" onClick={logout}>Cerrar sesión</button>
+                    </>
+                ) : (
+                    <>
+                        <Link href="/login" className={`navlink ${isActive('/login') ? 'navlink-active' : ''}`}>Login</Link>
+                        <Link href="/register" className={`navlink ${isActive('/register') ? 'navlink-active' : ''}`}>Registro</Link>
+                    </>
+                )}
+            </div>
+        </div>
     );
 }
