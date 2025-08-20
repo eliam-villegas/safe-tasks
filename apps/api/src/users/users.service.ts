@@ -25,7 +25,7 @@ export class UsersService {
             },
         });
 
-        return {id: user.id, email: userData.email};
+        return {id: user.id, email: userData.email, role: user.role};
     }
 
     async findByEmail(email: string){
