@@ -18,7 +18,7 @@ export default function RegisterPage() {
 
         try {
             const API = (process.env.NEXT_PUBLIC_API ?? '').replace(/\/+$/, '');
-            const res = await fetch(`${API}/users/register`, {
+            const res = await fetch(`${API}/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
