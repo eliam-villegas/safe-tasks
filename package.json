@@ -1,5 +1,19 @@
 {
-  "name": "safe-tasks",
   "private": true,
-  "workspaces": ["apps/api", "apps/web"]
+  "workspaces": ["apps/api", "apps/web"],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "postinstall": "npm -w api run prisma:generate --if-present",
+    "dev": "npm run dev:api & npm run dev:web",
+    "dev:api": "npm --workspace apps/api run start:dev",
+    "dev:web": "npm --workspace apps/web run dev",
+    "build": "npm run build:api && npm run build:web",
+    "build:api": "npm --workspace apps/api run build",
+    "build:web": "npm --workspace apps/web run build",
+    "start:api": "npm --workspace apps/api run start:prod",
+    "start:web": "npm --workspace apps/web run start"
+  },
+  "packageManager": "npm@10.8.2"
 }
