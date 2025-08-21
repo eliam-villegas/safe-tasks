@@ -4,6 +4,7 @@ const API = process.env.NEXT_PUBLIC_API_URL!;
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json(); // { token, newPassword }
+        console.log('[request-reset] body=', body);
         const res = await fetch(`${API}/auth/reset-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
