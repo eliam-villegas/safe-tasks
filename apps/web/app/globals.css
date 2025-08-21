@@ -1,42 +1,19 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@import "tailwindcss";
+
+@layer components {
+    .container-page { @apply max-w-3xl mx-auto p-4; }
+    .card { @apply bg-white rounded-2xl shadow p-6; }
+    .btn { @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium bg-black text-white hover:opacity-90 disabled:opacity-50; }
+    .btn-secondary { @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium bg-gray-100 text-gray-900 hover:bg-gray-200; }
+    .input { @apply w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-200; }
+    .select { @apply rounded-md border border-gray-300 px-2 py-2 outline-none focus:ring-2 focus:ring-blue-200; }
+    .muted { @apply text-sm text-gray-500; }
+    .navlink { @apply px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition; }
+    .navlink-active { @apply bg-gray-200 text-gray-900; }
+
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+body { @apply bg-gray-50 text-gray-900; }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-}
+* { box-sizing: border-box; }
+a:not(.btn):not(.btn-secondary) { text-decoration: none; color: inherit; }

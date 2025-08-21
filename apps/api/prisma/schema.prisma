@@ -22,9 +22,22 @@ model Task {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  password String
-  role     String @default("user")
-  Task     Task[]
+  id            Int             @id @default(autoincrement())
+  email         String          @unique
+  password      String
+  role          String          @default("user")
+  Task          Task[]
+  PasswordReset PasswordReset[]
+}
+
+model PasswordReset {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

@@ -1,13 +1,13 @@
 import {Injectable, NotFoundException, UnauthorizedException} from '@nestjs/common';
 import {CreateTaskDto} from "./dto/create-task.dto";
-import {PrismaClient, Prisma} from "@prisma/client";
 import {UpdateTaskDto} from "./dto/update-task.dto";
 import {ListTasksDto} from "./dto/list-task.dto";
+import { PrismaService } from '../prisma/prisma.service'
 
 @Injectable()
 export class TasksService {
 
-    private prisma = new PrismaClient();
+    constructor( private readonly prisma: PrismaService) {}
 
     // metodos user
     async findAll(userId: number, q: ListTasksDto){

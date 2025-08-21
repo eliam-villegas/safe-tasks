@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: safetasks_postgres_test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: safetasks
+      POSTGRES_PASSWORD: safetasks
+      POSTGRES_DB: safe_tasks_test
+    ports:
+      - "5433:5432"          # expone el puerto 5433 en tu máquina
+    volumes:
+      - pgdata-test:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U safetasks -d safe_tasks_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  pgdata-test:

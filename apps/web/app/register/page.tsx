@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import PasswordInput from '../components/PasswordInput';
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -14,16 +15,19 @@ export default function RegisterPage() {
         if (isLoading) return;
         setIsLoading(true);
         setMsg('');
+
         try {
-            const res = await fetch('/api/auth/register', {
+            const res = await fetch('/api/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
+
             if (!res.ok) {
                 const err = (await res.json().catch(() => ({}))) as { message?: string };
                 throw new Error(err?.message ?? `HTTP ${res.status}`);
             }
+
             setMsg('Registro exitoso. Redirigiendo…');
             router.replace('/login');
             router.refresh();
@@ -35,14 +39,24 @@ export default function RegisterPage() {
     }
 
     return (
-        <div style={{ padding: 16 }}>
-            <h1>Crear cuenta</h1>
-            <form onSubmit={handleSubmit} style={{ display:'grid', gap:8, maxWidth:360 }}>
-                <input type="email" placeholder="Correo" value={email} onChange={e=>setEmail(e.target.value)} required />
-                <input type="password" placeholder="Contraseña (min 6)" value={password} onChange={e=>setPassword(e.target.value)} required />
-                <button type="submit" disabled={isLoading}>{isLoading ? 'Creando…' : 'Registrarme'}</button>
-            </form>
-            {msg && <p style={{ color:'crimson' }}>{msg}</p>}
+        <div className="min-h-[70vh] flex items-center justify-center">
+            <div className="card w-full max-w-sm space-y-4">
+                <h1 className="text-xl font-semibold">Crear cuenta</h1>
+                <form onSubmit={handleSubmit} className="grid gap-3">
+                    <label>
+                        <span className="muted">Correo</span>
+                        <input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} required />
+                    </label>
+                    <label>
+                        <span className="muted">Contraseña (min 6)</span>
+                        <PasswordInput className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} required />
+                    </label>
+                    <button className="btn w-full" type="submit" disabled={isLoading}>
+                        {isLoading ? 'Creando…' : 'Registrarme'}
+                    </button>
+                </form>
+                {msg && <p className="text-red-600">{msg}</p>}
+            </div>
         </div>
     );
 }

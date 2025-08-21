@@ -1,87 +1,79 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
-type Me = { sub: number; email: string; role: 'admin' | 'user' };
-type Status = 'loading' | 'guest' | 'user' | 'admin';
+type Me = { email: string; role: 'user' | 'admin' } | null;
 
 export default function QuickBar() {
-    const router = useRouter();
+    const [me, setMe] = useState<Me>(null);
+    const [ready, setReady] = useState(false);
     const pathname = usePathname();
+    const router = useRouter();
 
-    const [me, setMe] = useState<Me | null>(null);
-    const [status, setStatus] = useState<Status>('loading');
-
-    const refetch = useCallback(async () => {
-        try {
-            setStatus(s => (s === 'loading' ? s : 'loading'));
-            const r = await fetch('/api/auth/me', { cache: 'no-store' });
-            if (!r.ok) {
-                setMe(null);
-                setStatus('guest');
-                return;
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await fetch('/api/auth/me', { cache: 'no-store' });
+                if (!cancelled) {
+                    if (res.ok) {
+                        const data = await res.json().catch(() => ({}));
+                        setMe(data?.email ? data : null);
+                    } else {
+                        setMe(null);
+                    }
+                }
+            } catch {
+                if (!cancelled) setMe(null);
+            } finally {
+                if (!cancelled) setReady(true);
             }
-            const data = (await r.json()) as Me;
-            setMe(data);
-            setStatus(data?.role === 'admin' ? 'admin' : 'user');
-        } catch {
-            setMe(null);
-            setStatus('guest');
-        }
-    }, []);
-
-    // 1) Al montar
-    useEffect(() => { refetch(); }, [refetch]);
-
-    // 2) Cada vez que cambia la ruta
-    useEffect(() => { refetch(); }, [pathname, refetch]);
-
-    // 3) Al recuperar foco de la ventana
-    useEffect(() => {
-        const onFocus = () => refetch();
-        window.addEventListener('focus', onFocus);
-        return () => window.removeEventListener('focus', onFocus);
-    }, [refetch]);
-
-    // 4) (Opcional) Escuchar evento global 'auth-changed'
-    useEffect(() => {
-        const h = () => refetch();
-        window.addEventListener('auth-changed', h);
-        return () => window.removeEventListener('auth-changed', h);
-    }, [refetch]);
+        })();
+        return () => { cancelled = true; };
+    }, [pathname]);
 
     async function logout() {
         await fetch('/api/auth/logout', { method: 'POST' });
-        // Notifica y refresca UI
-        window.dispatchEvent(new Event('auth-changed'));
+        setMe(null);
         router.replace('/login');
-        router.refresh();
     }
 
+    const navLink = (href: string, label: string) => {
+        const active = pathname === href;
+        return (
+            <Link
+                href={href}
+                className={`navlink ${active ? 'navlink-active' : ''}`}
+            >
+                {label}
+            </Link>
+        );
+    };
+
     return (
-        <nav style={{ display:'flex', gap:12, marginBottom:16, alignItems:'center' }}>
-            <Link href="/">Inicio</Link>
+        <header className="sticky top-0 z-10 bg-white/70 backdrop-blur border-b">
+            <nav className="container-page flex items-center justify-between py-2">
+                <div className="flex items-center gap-1">
+                    {navLink('/', 'Inicio')}
+                    {me && navLink('/tasks', 'Tareas')}
+                    {me?.role === 'admin' && navLink('/admin', 'Panel Admin')}
+                    {!me && navLink('/login', 'Login')}
+                    {!me && navLink('/register', 'Registrarse')}
+                    {!me && navLink('/forgot', 'Recuperar')}
+                </div>
 
-            {(status === 'user' || status === 'admin') && <Link href="/tasks">Tareas</Link>}
-            {status === 'admin' && <Link href="/admin">Panel Admin</Link>}
-
-            <span style={{ marginLeft:'auto' }} />
-
-            {status === 'loading' ? (
-                <span style={{ opacity:.6 }}>...</span>
-            ) : status === 'guest' ? (
-                <>
-                    <Link href="/login">Login</Link>
-                    <Link href="/register">Registro</Link>
-                </>
-            ) : (
-                <>
-                    <span style={{ opacity:.7 }}>{me?.email}</span>
-                    <button onClick={logout}>Cerrar sesión</button>
-                </>
-            )}
-        </nav>
+                <div className="flex items-center gap-3">
+                    {me && <span className="muted">{me.email}</span>}
+                    {me && (
+                        <button onClick={logout} className="btn-secondary">
+                            Cerrar sesión
+                        </button>
+                    )}
+                </div>
+            </nav>
+            {!ready && <div className="h-px bg-transparent" />}
+        </header>
     );
 }

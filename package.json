@@ -1,5 +1,11 @@
 {
-  "name": "safe-tasks",
   "private": true,
-  "workspaces": ["apps/api", "apps/web"]
+  "workspaces": ["apps/api", "apps/web"],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+
+  },
+  "packageManager": "npm@10.8.2"
 }
