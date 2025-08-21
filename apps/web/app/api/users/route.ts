@@ -1,32 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
-const API =
-    (process.env.API_URL || process.env.NEXT_PUBLIC_API || '').replace(/\/+$/, '');
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+
+function requireApiBase() {
+    if (!API_BASE) {
+        throw new Error('NEXT_PUBLIC_API_URL no está definida en el entorno.');
+    }
+    return API_BASE;
+}
 
 export async function POST(req: NextRequest) {
-    if (!API.startsWith('http')) {
-        return NextResponse.json(
-            { message: 'API base no configurada en el servidor' },
-            { status: 500 },
-        );
-    }
+    const base = requireApiBase();
+    const body = await req.json();
 
-    const body = await req.text(); // passtrough exacto
-    const upstream = await fetch(`${API}/users/register`, {
+    const res = await fetch(`${base}/users/register`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body,
-        // Opcional: timeout/con cache
-        // next: { revalidate: 0 },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
     });
 
-    // Retorna tal cual (status y body)
-    const text = await upstream.text();
-    const contentType =
-        upstream.headers.get('content-type') || 'application/json';
-
-    return new NextResponse(text, {
-        status: upstream.status,
-        headers: { 'content-type': contentType },
+    // Reenvía el status real del backend
+    const text = await res.text();
+    return new Response(text, {
+        status: res.status,
+        headers: { 'Content-Type': res.headers.get('Content-Type') ?? 'application/json' },
     });
 }
