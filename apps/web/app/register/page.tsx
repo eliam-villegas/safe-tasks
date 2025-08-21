@@ -15,16 +15,20 @@ export default function RegisterPage() {
         if (isLoading) return;
         setIsLoading(true);
         setMsg('');
+
         try {
-            const res = await fetch('/api/users/register', {
+            const API = (process.env.NEXT_PUBLIC_API ?? '').replace(/\/+$/, '');
+            const res = await fetch(`${API}/users/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
+
             if (!res.ok) {
                 const err = (await res.json().catch(() => ({}))) as { message?: string };
                 throw new Error(err?.message ?? `HTTP ${res.status}`);
             }
+
             setMsg('Registro exitoso. Redirigiendo…');
             router.replace('/login');
             router.refresh();
@@ -48,8 +52,9 @@ export default function RegisterPage() {
                         <span className="muted">Contraseña (min 6)</span>
                         <PasswordInput className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} required />
                     </label>
-
-                    <button className="btn w-full" type="submit" disabled={isLoading}>{isLoading ? 'Creando…' : 'Registrarme'}</button>
+                    <button className="btn w-full" type="submit" disabled={isLoading}>
+                        {isLoading ? 'Creando…' : 'Registrarme'}
+                    </button>
                 </form>
                 {msg && <p className="text-red-600">{msg}</p>}
             </div>
