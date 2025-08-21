@@ -3,9 +3,11 @@ import "./globals.css";
 import QuickBar from "./components/QuickBar";
 
 export const metadata: Metadata = {
+
     title: "SafeTasks",
     description: "Organiza tus tareas de forma segura",
     robots: { index: false, follow: false }
+
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
